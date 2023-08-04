@@ -12,7 +12,7 @@ scheduler.run()
 ```
 
 Method `run` blocks the current thread. It returns if no tasks were assigned or `stop_src.request_stop()` is called.
-If `run` method shouldn't block the current thread. It can be wrapped in `jthread`
+If `run` method shouldn't block the current thread, it can be wrapped in `jthread`
 
 ```
 auto thread = std::jthread([&](std::stop_token st) {
