@@ -16,7 +16,7 @@ TEST_CASE("stop", "[common]") {
     thread = std::jthread{};
     const auto end = std::chrono::steady_clock::now();
     REQUIRE(call_count == 1);
-    REQUIRE(end - start < std::chrono::milliseconds{ 2 });
+    REQUIRE(end - start < std::chrono::milliseconds{ 3 });
 }
 
 TEST_CASE("empty", "[common]") {

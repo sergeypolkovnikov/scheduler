@@ -3,6 +3,19 @@
 #include <condition_variable>
 
 namespace scheduler {
+
+    namespace helper {
+        template<typename Clock>
+        void sleep_until(std::chrono::time_point<Clock> time, const std::stop_token& st) {
+            std::condition_variable cv;
+            std::mutex mutex;
+            std::unique_lock<std::mutex> ul{ mutex };
+            std::stop_callback stop_wait{ st, [&cv]() { cv.notify_one(); } };
+            cv.wait_until(ul, time, [&st]() { return st.stop_requested(); });
+        }
+    }
+
+
     class SyncScheduler {
     public:
         SyncScheduler(std::stop_token st) : stop_token{ st } {}
@@ -13,7 +26,7 @@ namespace scheduler {
                     return;
                 }
                 auto& task = *task_ptr;
-                sleep_until(task.get_next_execution(), stop_token);
+                helper::sleep_until(task.get_next_execution(), stop_token);
                 if (stop_token.stop_requested()) {
                     return;
                 }
@@ -52,7 +65,7 @@ namespace scheduler {
             time_point next_execution;
         };
 
-        Task* select_next_task() {
+        Task* select_next_task() noexcept {
             auto minTask = std::min_element(tasks.begin()
                 , tasks.end()
                 , [](const Task& fst, const Task& snd) {
@@ -61,14 +74,6 @@ namespace scheduler {
             return minTask != tasks.end() ? &*minTask : nullptr;
         }
         
-        static void sleep_until(Task::time_point time, std::stop_token st) {
-            std::condition_variable cv;
-            std::mutex mutex_;
-            std::unique_lock<std::mutex> ul_{ mutex_ };
-            std::stop_callback stop_wait{ st, [&cv]() { cv.notify_one(); } };
-            cv.wait_until(ul_, time, [&st]() { return st.stop_requested(); });
-        }
-
         std::stop_token stop_token;
         std::vector<Task> tasks;
     };
